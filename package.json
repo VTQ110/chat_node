@@ -1,1 +1,0 @@
-{"name":"socketio-node","version":"0.0.1","description":"my first socket.io app","dependencies":{"express":"^4.19.1","jsonwebtoken":"^9.0.2","socket.io":"^4.7.5"}}
