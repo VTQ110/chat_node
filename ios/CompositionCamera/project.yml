@@ -1,0 +1,25 @@
+# Generate the Xcode project with XcodeGen:
+#   brew install xcodegen
+#   cd ios/CompositionCamera && xcodegen generate
+name: CompositionCamera
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  CompositionCamera:
+    type: application
+    platform: iOS
+    sources:
+      - path: CompositionCamera
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.CompositionCamera
+        INFOPLIST_FILE: CompositionCamera/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
