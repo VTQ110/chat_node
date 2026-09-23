@@ -15,7 +15,23 @@ và gợi ý trực tiếp để chủ thể nằm đúng "điểm vàng", giúp
 - Chạm để lấy nét/đo sáng, đổi camera trước/sau, chụp ảnh và lưu vào thư viện Ảnh.
 - Khung ngắm 3:4 khớp đúng với ảnh chụp, nên lưới trên màn hình trùng với ảnh thật.
 
-## Chạy dự án
+## Cài lên iPhone không cần Mac (file .ipa)
+
+Mỗi lần push thay đổi trong `ios/`, GitHub Actions (workflow `iOS build`) tự build app trên macOS và
+tạo file **`CompositionCamera-unsigned.ipa`**. Tải file đó ở tab *Actions* → lần chạy mới nhất →
+mục *Artifacts* (giải nén file .zip tải về để lấy .ipa).
+
+File .ipa chưa được ký, nên cần ký bằng Apple ID của bạn khi cài:
+
+1. Cài **Sideloadly** (Windows/Mac, https://sideloadly.io) hoặc **AltStore** (https://altstore.io).
+2. Cắm iPhone vào máy tính, kéo file .ipa vào Sideloadly, nhập Apple ID rồi bấm *Start*.
+3. Trên iPhone: *Cài đặt → Cài đặt chung → VPN & Quản lý thiết bị* → tin cậy Apple ID của bạn.
+4. iOS 16+: bật *Cài đặt → Quyền riêng tư & Bảo mật → Chế độ nhà phát triển* rồi khởi động lại máy.
+
+Với Apple ID miễn phí, app hết hạn sau 7 ngày (chỉ cần cài lại). Có tài khoản Apple Developer
+(99 USD/năm) thì dùng Xcode/TestFlight như bên dưới.
+
+## Chạy dự án bằng Xcode
 
 Yêu cầu: Xcode 15+, iOS 16+, iPhone thật (Simulator không có camera).
 
