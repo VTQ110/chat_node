@@ -13,6 +13,13 @@ struct CameraScreen: View {
     @State private var tipVisible = false
     @State private var flash = false
 
+    /// Screenshot mode (Debug builds only); nil when using the real camera.
+    private let demo = DemoMode.current
+
+    private var status: CameraService.Status { demo?.status ?? camera.status }
+    private var toastMessage: String? { demo?.toast ?? camera.toastMessage }
+    private var lastPhoto: UIImage? { demo.map { $0.showThumbnail ? $0.image : nil } ?? camera.lastPhoto }
+
     var body: some View {
         VStack(spacing: 0) {
             topBar
@@ -25,6 +32,13 @@ struct CameraScreen: View {
         }
         .background(Color.black.ignoresSafeArea())
         .onAppear {
+            if let demo {
+                guide = demo.guide
+                variant = demo.variant
+                smartGuideOn = demo.smartGuideOn
+                levelOn = demo.levelOn
+                return
+            }
             camera.start()
             level.start()
         }
@@ -33,6 +47,7 @@ struct CameraScreen: View {
             level.stop()
         }
         .onChange(of: scenePhase) { phase in
+            guard demo == nil else { return }
             if phase == .active {
                 camera.start()
                 level.start()
@@ -42,6 +57,10 @@ struct CameraScreen: View {
             }
         }
         .task(id: guide) {
+            if let demo {
+                tipVisible = demo.showTip
+                return
+            }
             // Show the tip for the newly selected guide for a few seconds.
             withAnimation { tipVisible = true }
             try? await Task.sleep(nanoseconds: 3_500_000_000)
@@ -59,23 +78,28 @@ struct CameraScreen: View {
     private var viewfinder: some View {
         GeometryReader { geo in
             let frame = CGRect(origin: .zero, size: geo.size)
-            let advice = currentAdvice(in: frame)
+            let subject = demo.map { $0.subjectRect(in: frame) } ?? camera.subjectRect
+            let advice = currentAdvice(in: frame, subject: subject)
 
             ZStack {
-                CameraPreviewView(camera: camera)
-                    .gesture(
-                        SpatialTapGesture().onEnded { value in
-                            camera.focus(at: value.location)
-                        }
-                    )
+                if let demo {
+                    DemoPreviewView(demo: demo)
+                } else {
+                    CameraPreviewView(camera: camera)
+                        .gesture(
+                            SpatialTapGesture().onEnded { value in
+                                camera.focus(at: value.location)
+                            }
+                        )
+                }
 
                 GuideOverlayView(guide: guide,
                                  variant: variant,
-                                 subjectRect: smartGuideOn ? camera.subjectRect : nil,
+                                 subjectRect: smartGuideOn ? subject : nil,
                                  advice: advice)
 
-                if levelOn && !level.isFlat {
-                    LevelIndicatorView(rollDegrees: level.rollDegrees)
+                if levelOn && (demo != nil || !level.isFlat) {
+                    LevelIndicatorView(rollDegrees: demo?.rollDegrees ?? level.rollDegrees)
                 }
 
                 VStack {
@@ -88,11 +112,11 @@ struct CameraScreen: View {
                         banner(advice.message,
                                icon: advice.arrow ?? "checkmark.circle.fill",
                                color: advice.isAligned ? .green : .yellow)
-                    } else if smartGuideOn && guide != .none && camera.status == .running {
+                    } else if smartGuideOn && guide != .none && status == .running {
                         banner("Hướng camera vào chủ thể để nhận gợi ý bố cục",
                                icon: "viewfinder", color: .white.opacity(0.85))
                     }
-                    if let toast = camera.toastMessage {
+                    if let toast = toastMessage {
                         banner(toast, icon: "photo", color: .white)
                     }
                 }
@@ -108,8 +132,9 @@ struct CameraScreen: View {
         }
     }
 
-    private func currentAdvice(in frame: CGRect) -> CompositionAdvice? {
-        guard smartGuideOn, let subject = camera.subjectRect, let kind = camera.subjectKind else { return nil }
+    private func currentAdvice(in frame: CGRect, subject: CGRect?) -> CompositionAdvice? {
+        let kind = demo.map { $0.subjectKind } ?? camera.subjectKind
+        guard smartGuideOn, let subject, let kind else { return nil }
         return CompositionAdvisor.advice(subject: subject,
                                          kind: kind,
                                          focusPoints: guide.focusPoints(in: frame, variant: variant),
@@ -118,7 +143,7 @@ struct CameraScreen: View {
 
     @ViewBuilder
     private var statusOverlay: some View {
-        switch camera.status {
+        switch status {
         case .unauthorized:
             VStack(spacing: 12) {
                 Image(systemName: "camera.fill").font(.largeTitle)
@@ -226,7 +251,7 @@ struct CameraScreen: View {
     private var bottomBar: some View {
         HStack {
             Group {
-                if let photo = camera.lastPhoto {
+                if let photo = lastPhoto {
                     Image(uiImage: photo)
                         .resizable()
                         .scaledToFill()
@@ -247,7 +272,7 @@ struct CameraScreen: View {
                         .frame(width: 62, height: 62)
                 }
             }
-            .disabled(camera.isCapturing || camera.status != .running)
+            .disabled(camera.isCapturing || status != .running)
 
             Spacer()
 

@@ -1,0 +1,81 @@
+name: iOS screenshots
+
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-screenshots.yml"
+      - "!ios/CompositionCamera/Screenshots/**"
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: ios/CompositionCamera
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Fetch sample photos (Unsplash via picsum.photos)
+        run: |
+          mkdir -p DemoAssets
+          fetch() {
+            [ -f "DemoAssets/demo_$1.jpg" ] || curl -sfL -o "DemoAssets/demo_$1.jpg" "https://picsum.photos/id/$2/900/1200"
+          }
+          fetch landscape 1015
+          fetch kayak 1011
+          fetch portrait 1027
+          # Demo photos are only bundled into this Simulator build, never into the release IPA.
+          cp DemoAssets/*.jpg CompositionCamera/
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build for Simulator (Debug)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project CompositionCamera.xcodeproj \
+            -scheme CompositionCamera \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Boot Simulator and capture screenshots
+        run: |
+          UDID=$(xcrun simctl create shots com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro)
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/CompositionCamera.app
+          sleep 5
+          rm -rf Screenshots
+          scripts/take-screenshots.sh "$UDID" Screenshots
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: ios/CompositionCamera/Screenshots
+
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Screenshots DemoAssets
+          if git diff --cached --quiet; then
+            echo "No screenshot changes"
+            exit 0
+          fi
+          git commit -m "Update app screenshots"
+          for i in 1 2 3; do
+            git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME" && break
+            sleep 5
+          done
