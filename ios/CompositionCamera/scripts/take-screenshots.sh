@@ -18,11 +18,14 @@ shot() {
     echo "captured $name"
 }
 
-# Real first launch: the camera permission prompt.
-xcrun simctl privacy "$UDID" reset camera "$BUNDLE" 2>/dev/null || true
-shot 01-quyen-camera
+xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 \
+    --cellularBars 4 --wifiBars 3 2>/dev/null || true
+xcrun simctl privacy "$UDID" grant camera "$BUNDLE" 2>/dev/null || true
+xcrun simctl privacy "$UDID" grant photos-add "$BUNDLE" 2>/dev/null || true
 
 D="-demo YES"
+# The woman in the canoe, marked by hand (normalized x, y, width, height in the photo).
+KAYAK="-demoImage kayak -demoSubject 0.33,0.31,0.34,0.31"
 shot 02-man-hinh-chinh    $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO
 shot 03-meo-bo-cuc        $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoTip YES
 shot 04-ti-le-vang        $D -demoImage landscape -demoGuide goldenRatio -demoSmart NO
@@ -31,12 +34,14 @@ shot 06-xoan-oc-xoay      $D -demoImage landscape -demoGuide goldenSpiral -demoV
 shot 07-tam-giac          $D -demoImage landscape -demoGuide goldenTriangle -demoSmart NO
 shot 08-duong-cheo        $D -demoImage landscape -demoGuide diagonals -demoSmart NO
 shot 09-doi-xung          $D -demoImage landscape -demoGuide symmetry -demoSmart NO
-shot 10-goi-y-chua-dat    $D -demoImage kayak -demoGuide ruleOfThirds -demoZoom 1.6
-shot 11-goi-y-dat         $D -demoImage kayak -demoGuide ruleOfThirds -demoZoom 1.6 -demoAlign YES
-shot 12-khuon-mat         $D -demoImage portrait -demoGuide ruleOfThirds -demoZoom 1.4
-shot 13-khuon-mat-dat     $D -demoImage portrait -demoGuide ruleOfThirds -demoZoom 1.4 -demoAlign YES
-shot 14-lui-ra-xa         $D -demoImage portrait -demoGuide ruleOfThirds -demoZoom 2.6
-shot 15-can-bang-nghieng  $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoRoll 7
-shot 16-can-bang-dat      $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoRoll 0.3
-shot 17-da-chup           $D -demoImage kayak -demoGuide ruleOfThirds -demoZoom 1.6 -demoAlign YES -demoThumbnail YES -demoToast "Đã lưu vào thư viện Ảnh"
-shot 18-tu-choi-quyen     $D -demoStatus unauthorized
+shot 10-goi-y-chua-dat    $D $KAYAK -demoGuide ruleOfThirds -demoZoom 1.4
+shot 11-goi-y-dat         $D $KAYAK -demoGuide ruleOfThirds -demoZoom 1.4 -demoAlign YES
+shot 12-lui-ra-xa         $D -demoImage portrait -demoGuide ruleOfThirds -demoZoom 1.4
+shot 13-can-bang-nghieng  $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoRoll 7
+shot 14-can-bang-dat      $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoRoll 0.3
+shot 15-da-chup           $D $KAYAK -demoGuide ruleOfThirds -demoZoom 1.4 -demoAlign YES -demoThumbnail YES -demoToast "Đã lưu vào thư viện Ảnh"
+shot 16-tu-choi-quyen     $D -demoStatus unauthorized
+
+# Last: a real first launch showing the camera permission prompt.
+xcrun simctl privacy "$UDID" reset camera "$BUNDLE" 2>/dev/null || true
+shot 01-quyen-camera
