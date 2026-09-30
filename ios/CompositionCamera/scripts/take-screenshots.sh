@@ -36,7 +36,7 @@ shot 08-duong-cheo        $D -demoImage landscape -demoGuide diagonals -demoSmar
 shot 09-doi-xung          $D -demoImage landscape -demoGuide symmetry -demoSmart NO
 shot 10-goi-y-chua-dat    $D $KAYAK -demoGuide ruleOfThirds -demoZoom 1.4
 shot 11-goi-y-dat         $D $KAYAK -demoGuide ruleOfThirds -demoZoom 1.4 -demoAlign YES
-shot 12-lui-ra-xa         $D -demoImage portrait -demoGuide ruleOfThirds -demoZoom 1.4
+shot 12-lui-ra-xa         $D -demoImage portrait -demoSubject 0.33,0.18,0.43,0.49 -demoKind face -demoGuide ruleOfThirds -demoZoom 1.2
 shot 13-can-bang-nghieng  $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoRoll 7
 shot 14-can-bang-dat      $D -demoImage landscape -demoGuide ruleOfThirds -demoSmart NO -demoRoll 0.3
 shot 15-da-chup           $D $KAYAK -demoGuide ruleOfThirds -demoZoom 1.4 -demoAlign YES -demoThumbnail YES -demoToast "Đã lưu vào thư viện Ảnh"
